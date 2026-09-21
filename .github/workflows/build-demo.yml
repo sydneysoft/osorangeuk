@@ -1,0 +1,68 @@
+name: Build OrangeSoft Browser Demo
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build frontend bundle
+        run: npm run js:build
+
+      - name: Build styles
+        run: npm run sass
+
+      - name: Build macOS app
+        run: npx electron-builder --mac dmg --publish never
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: orangesoft-browser-macos
+          path: dist/*.dmg
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build frontend bundle
+        run: npm run js:build
+
+      - name: Build styles
+        run: npm run sass
+
+      - name: Build Windows app
+        run: npx electron-builder --win nsis --publish never
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: orangesoft-browser-windows
+          path: dist/*.exe
