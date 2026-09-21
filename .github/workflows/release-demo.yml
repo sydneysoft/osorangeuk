@@ -1,0 +1,120 @@
+name: Publish OrangeSoft Browser Demo
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build frontend bundle
+        run: npm run js:build
+
+      - name: Build styles
+        run: npm run sass
+
+      - name: Build macOS demo
+        run: npx electron-builder --mac dmg --publish never
+
+      - name: Rename macOS demo
+        shell: bash
+        run: |
+          file="$(find dist -maxdepth 1 -name '*.dmg' -print -quit)"
+          test -n "$file"
+          cp "$file" OrangeSoft-Browser-Demo-macOS.dmg
+
+      - name: Upload macOS demo
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: OrangeSoft-Browser-Demo-macOS.dmg
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build frontend bundle
+        run: npm run js:build
+
+      - name: Build styles
+        run: npm run sass
+
+      - name: Build Windows demo
+        run: npx electron-builder --win nsis --publish never
+
+      - name: Rename Windows demo
+        shell: pwsh
+        run: |
+          $file = Get-ChildItem dist -Filter *.exe | Select-Object -First 1
+          if (-not $file) { throw "No Windows installer found" }
+          Copy-Item $file.FullName OrangeSoft-Browser-Demo-Windows.exe
+
+      - name: Upload Windows demo
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: OrangeSoft-Browser-Demo-Windows.exe
+
+  release:
+    runs-on: ubuntu-latest
+    needs:
+      - build-macos
+      - build-windows
+
+    steps:
+      - name: Download macOS demo
+        uses: actions/download-artifact@v4
+        with:
+          name: release-macos
+          path: release
+
+      - name: Download Windows demo
+        uses: actions/download-artifact@v4
+        with:
+          name: release-windows
+          path: release
+
+      - name: Publish demo release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: demo-${{ github.run_number }}
+          name: OrangeSoft Browser Demo
+          body: |
+            OrangeSoft Browser demo for macOS and Windows.
+
+            Demo features include browser tabs, favorites, history, and click-to-translate.
+
+            These demo builds are currently unsigned, so macOS Gatekeeper or Windows SmartScreen may display a warning.
+          files: |
+            release/OrangeSoft-Browser-Demo-macOS.dmg
+            release/OrangeSoft-Browser-Demo-Windows.exe
+          make_latest: true
