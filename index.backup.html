@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<title>OrangeSoft Browser</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f3f3f3;
+  overflow: hidden;
+}
+
+#toolbar {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #ffffff;
+  border-bottom: 1px solid #d9d9d9;
+}
+
+#brand {
+  font-size: 17px;
+  font-weight: 700;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+button {
+  height: 38px;
+  min-width: 38px;
+  border: 0;
+  border-radius: 10px;
+  background: #eeeeee;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #dddddd;
+}
+
+#address {
+  flex: 1;
+  height: 40px;
+  border: 1px solid #d0d0d0;
+  border-radius: 20px;
+  padding: 0 18px;
+  font-size: 15px;
+  outline: none;
+}
+
+#address:focus {
+  border-color: #999999;
+}
+
+webview {
+  width: 100%;
+  height: calc(100vh - 64px);
+}
+</style>
+</head>
+
+<body>
+
+<div id="toolbar">
+
+  <div id="brand">
+    🍊 OrangeSoft
+  </div>
+
+  <button id="back">←</button>
+  <button id="forward">→</button>
+  <button id="reload">↻</button>
+
+  <input
+    id="address"
+    type="text"
+    value="https://www.google.com"
+    autocomplete="off"
+  >
+
+  <button id="home">⌂</button>
+
+</div>
+
+<webview
+  id="browser"
+  src="https://www.google.com"
+  allowpopups>
+</webview>
+
+<script>
+const browser = document.getElementById('browser');
+const address = document.getElementById('address');
+
+document.getElementById('back').onclick = () => {
+  if (browser.canGoBack()) browser.goBack();
+};
+
+document.getElementById('forward').onclick = () => {
+  if (browser.canGoForward()) browser.goForward();
+};
+
+document.getElementById('reload').onclick = () => {
+  browser.reload();
+};
+
+document.getElementById('home').onclick = () => {
+  browser.loadURL('https://www.google.com');
+};
+
+address.addEventListener('keydown', (event) => {
+
+  if (event.key !== 'Enter') return;
+
+  let value = address.value.trim();
+
+  if (!value) return;
+
+  if (!value.includes('.') && !value.startsWith('http')) {
+
+    value =
+      'https://www.google.com/search?q=' +
+      encodeURIComponent(value);
+
+  } else if (!/^https?:\/\//i.test(value)) {
+
+    value = 'https://' + value;
+
+  }
+
+  browser.loadURL(value);
+
+});
+
+browser.addEventListener('did-navigate', event => {
+  address.value = event.url;
+});
+
+browser.addEventListener('did-navigate-in-page', event => {
+  address.value = event.url;
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Electron build output
+/dist/
+/out/
+/release/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# Chromium/depot_tools leftovers
+.gclient
+.gclient_previous_sync_commits
+
+# Environment
+.env
+.env.local

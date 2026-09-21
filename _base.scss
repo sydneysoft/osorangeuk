@@ -1,0 +1,52 @@
+@use 'variables' as v;
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  background: v.$background;
+  color: v.$text;
+}
+
+body {
+  display: block;
+}
+
+#browser-container {
+  position: relative;
+  width: 100%;
+
+  height: calc(
+    100vh - v.$tabs-height - v.$toolbar-height
+  );
+
+  background: v.$surface;
+}
+
+webview {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+
+  display: none;
+}
+
+webview.active {
+  display: flex;
+}

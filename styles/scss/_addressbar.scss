@@ -1,0 +1,114 @@
+@use 'variables' as v;
+
+.address-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+#address {
+  width: 100%;
+  height: 40px;
+
+  padding: 0 18px;
+
+  border: 1px solid v.$border-dark;
+  border-radius: v.$radius-large;
+
+  outline: none;
+
+  background: #fafafa;
+  color: v.$text;
+
+  font-size: 14px;
+
+  &:focus {
+    background: v.$surface;
+    border-color: #aaaaaa;
+  }
+
+  &::placeholder {
+    color: v.$text-secondary;
+  }
+}
+
+#suggestions {
+  position: absolute;
+
+  top: 46px;
+  left: 0;
+  right: 0;
+
+  z-index: 1000;
+
+  display: none;
+
+  overflow: hidden;
+
+  background: v.$surface;
+
+  border: 1px solid v.$border;
+  border-radius: 12px;
+
+  box-shadow:
+    0 8px 25px
+    rgba(0, 0, 0, 0.12);
+}
+
+#suggestions.visible {
+  display: block;
+}
+
+.suggestion {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 11px 16px;
+
+  cursor: pointer;
+
+  font-size: 14px;
+
+  &:hover,
+  &.selected {
+    background: #f2f2f2;
+  }
+}
+
+.suggestion-title {
+  font-weight: 500;
+}
+
+.suggestion-url {
+  margin-left: auto;
+
+  max-width: 45%;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  color: v.$text-secondary;
+
+  font-size: 12px;
+}
+
+.suggestion-icon {
+  width: 20px;
+  min-width: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #777777;
+
+  font-size: 18px;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI Symbol",
+    sans-serif;
+}

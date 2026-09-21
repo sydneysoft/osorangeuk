@@ -1,0 +1,36 @@
+{
+  "name": "orangesoft-browser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "sass": "sass styles/scss:styles/css",
+    "sass:watch": "sass --watch styles/scss:styles/css",
+    "js:build": "esbuild js/main.js --bundle --outfile=js/dist/browser.js --format=iife --platform=browser",
+    "js:watch": "esbuild js/main.js --bundle --outfile=js/dist/browser.js --format=iife --platform=browser --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^44.4.3",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2",
+    "sass": "^1.104.1"
+  },
+  "productName": "OrangeSoft Browser",
+  "build": {
+    "appId": "uk.orangesoft.browser",
+    "productName": "OrangeSoft Browser",
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "build/icon.icns"
+    }
+  }
+}

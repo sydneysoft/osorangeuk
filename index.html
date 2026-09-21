@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<title>OrangeSoft Browser</title>
+<link rel="stylesheet" href="styles/css/browser.css">
+</head>
+
+<body>
+
+<div id="tabs">
+  <button id="new-tab-button">+</button>
+</div>
+
+<div id="toolbar">
+
+<div class="brand">
+  <img src="assets/orangesoft-logo.png" alt="OrangeSoft">
+</div>
+
+<button
+  class="toolbar-button"
+  id="back"
+  title="Back"
+>
+  ←
+</button>
+
+  <button class="toolbar-button" id="forward" title="Forward">
+    →
+  </button>
+
+  <button class="toolbar-button" id="reload" title="Reload">
+    ↻
+  </button>
+<div class="address-wrapper">
+
+  <input
+    id="address"
+    type="text"
+    autocomplete="off"
+    spellcheck="false"
+    placeholder="Search or enter address"
+  >
+<div id="suggestions"></div>
+
+</div>
+  <button class="toolbar-button" id="home" title="Home">
+    ⌂
+  </button>
+<button
+  id="favorite"
+  class="toolbar-button"
+  title="Add to Favorites"
+>
+  ☆
+</button>
+</div>
+<div
+  id="favorites-popup"
+  class="favorites-popup"
+>
+  <div class="favorites-header">
+
+    <h2>Favorites</h2>
+
+    <button
+      id="close-favorites"
+      class="favorites-close"
+    >
+      ×
+    </button>
+
+  </div>
+
+  <div
+    id="favorites-grid"
+    class="favorites-grid"
+  ></div>
+</div>
+
+<div id="browser-container"></div>
+
+<script src="js/dist/browser.js"></script>
+</body>
+</html>

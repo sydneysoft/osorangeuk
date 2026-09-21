@@ -1,0 +1,54 @@
+@use 'variables' as v;
+
+#toolbar {
+  height: v.$toolbar-height;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 8px 14px;
+
+  background: v.$surface;
+
+  border-bottom: 1px solid v.$border;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+
+  margin-right: 6px;
+
+  font-weight: 700;
+  font-size: 16px;
+
+  white-space: nowrap;
+
+  img {
+    height: 32px;
+    width: auto;
+
+    display: block;
+  }
+}
+
+.toolbar-button {
+  height: 38px;
+  min-width: 38px;
+
+  border: 0;
+
+  border-radius: v.$radius-medium;
+
+  background: v.$surface-muted;
+
+  font-size: 17px;
+
+  cursor: pointer;
+
+  &:hover {
+    background: #e2e2e2;
+  }
+}
