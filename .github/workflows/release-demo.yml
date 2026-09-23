@@ -111,7 +111,7 @@ jobs:
           body: |
             OrangeSoft Browser demo for macOS and Windows.
 
-            Demo features include browser tabs, favorites, history, and click-to-translate.
+            Demo features include browser tabs, favorites, history, native-language word translation, StoryLingo saved vocabulary, first-run onboarding, and account settings.
 
             These demo builds are currently unsigned, so macOS Gatekeeper or Windows SmartScreen may display a warning.
           files: |
