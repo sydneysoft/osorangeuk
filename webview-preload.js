@@ -2,27 +2,67 @@ const {
   ipcRenderer
 } = require('electron');
 
-
 let popup = null;
 let requestNumber = 0;
+let nativeLanguage = 'en';
+let signedIn = false;
 
+const languageNames = {
+  en: 'English',
+  uk: 'Ukrainian',
+  ru: 'Russian',
+  pl: 'Polish',
+  fr: 'French',
+  de: 'German',
+  es: 'Spanish',
+  it: 'Italian'
+};
 
-/*
- * GET WORD UNDER MOUSE
- */
+function languageName(code) {
+  if (languageNames[code]) {
+    return languageNames[code];
+  }
+
+  try {
+    return new Intl.DisplayNames(
+      ['en'],
+      { type: 'language' }
+    ).of(code) || code.toUpperCase();
+  } catch {
+    return String(code || '').toUpperCase();
+  }
+}
+
+function selectedWord() {
+  const selection =
+    window.getSelection?.();
+
+  const value =
+    selection
+      ?.toString()
+      .trim()
+      .replace(/\s+/g, ' ') || '';
+
+  if (
+    !value ||
+    value.length > 100 ||
+    value.split(' ').length > 3
+  ) {
+    return null;
+  }
+
+  return value;
+}
 
 function getWordAtPoint(
   x,
   y
 ) {
-
   let range = null;
-
 
   if (
     document.caretPositionFromPoint
   ) {
-
     const position =
       document.caretPositionFromPoint(
         x,
@@ -33,7 +73,6 @@ function getWordAtPoint(
       return null;
     }
 
-
     range =
       document.createRange();
 
@@ -41,30 +80,23 @@ function getWordAtPoint(
       position.offsetNode,
       position.offset
     );
-
   } else if (
     document.caretRangeFromPoint
   ) {
-
     range =
       document.caretRangeFromPoint(
         x,
         y
       );
-
   }
-
 
   if (
     !range ||
     range.startContainer.nodeType !==
       Node.TEXT_NODE
   ) {
-
     return null;
-
   }
-
 
   const text =
     range.startContainer.textContent;
@@ -72,13 +104,11 @@ function getWordAtPoint(
   const offset =
     range.startOffset;
 
-
   let start =
     offset;
 
   let end =
     offset;
-
 
   const isWordCharacter =
     character =>
@@ -86,18 +116,14 @@ function getWordAtPoint(
         character
       );
 
-
   while (
     start > 0 &&
     isWordCharacter(
       text[start - 1]
     )
   ) {
-
     start--;
-
   }
-
 
   while (
     end < text.length &&
@@ -105,11 +131,8 @@ function getWordAtPoint(
       text[end]
     )
   ) {
-
     end++;
-
   }
-
 
   const word =
     text
@@ -119,108 +142,64 @@ function getWordAtPoint(
       )
       .trim();
 
-
-  if (
-    !word ||
-    word.length < 2
-  ) {
-
-    return null;
-
-  }
-
-
-  return word;
+  return word &&
+    word.length >= 2
+      ? word
+      : null;
 }
 
-
-/*
- * REMOVE OLD POPUP
- */
-
 function removePopup() {
-
   if (!popup) {
     return;
   }
 
-
   popup.remove();
-
   popup = null;
-
 }
-
-
-/*
- * SHOW POPUP
- */
 
 function showPopup(
   x,
   y,
-  word,
-  translation,
-  targetLanguage
+  result
 ) {
-
   removePopup();
-
 
   popup =
     document.createElement(
       'div'
     );
 
-
-  popup.style.position =
-    'fixed';
-
-  popup.style.left =
-    `${Math.min(
-      x,
-      window.innerWidth - 280
-    )}px`;
-
-  popup.style.top =
-    `${Math.min(
-      y + 18,
-      window.innerHeight - 120
-    )}px`;
-
-  popup.style.zIndex =
-    '2147483647';
-
-  popup.style.minWidth =
-    '180px';
-
-  popup.style.maxWidth =
-    '280px';
-
-  popup.style.padding =
-    '12px 14px';
-
-  popup.style.background =
-    'rgba(30, 30, 32, 0.96)';
-
-  popup.style.color =
-    '#ffffff';
-
-  popup.style.borderRadius =
-    '12px';
-
-  popup.style.boxShadow =
-    '0 10px 30px rgba(0,0,0,.3)';
-
-  popup.style.fontFamily =
-    '-apple-system, BlinkMacSystemFont, sans-serif';
-
-  popup.style.fontSize =
-    '14px';
-
-  popup.style.lineHeight =
-    '1.4';
-
+  Object.assign(
+    popup.style,
+    {
+      position: 'fixed',
+      left: `${Math.max(
+        12,
+        Math.min(
+          x,
+          window.innerWidth - 312
+        )
+      )}px`,
+      top: `${Math.max(
+        12,
+        Math.min(
+          y + 18,
+          window.innerHeight - 190
+        )
+      )}px`,
+      zIndex: '2147483647',
+      width: 'min(300px, calc(100vw - 24px))',
+      padding: '13px 14px',
+      background: 'rgba(24, 24, 26, 0.97)',
+      color: '#ffffff',
+      border: '1px solid rgba(255,255,255,.12)',
+      borderRadius: '14px',
+      boxShadow: '0 16px 42px rgba(0,0,0,.34)',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      fontSize: '14px',
+      lineHeight: '1.4'
+    }
+  );
 
   const original =
     document.createElement(
@@ -228,32 +207,32 @@ function showPopup(
     );
 
   original.textContent =
-    word;
+    result.original;
 
-  original.style.opacity =
-    '.65';
+  Object.assign(
+    original.style,
+    {
+      opacity: '.62',
+      fontSize: '12px'
+    }
+  );
 
-  original.style.fontSize =
-    '12px';
-
-
-  const result =
+  const translation =
     document.createElement(
       'div'
     );
 
-  result.textContent =
-    translation;
+  translation.textContent =
+    result.translation;
 
-  result.style.marginTop =
-    '4px';
-
-  result.style.fontSize =
-    '18px';
-
-  result.style.fontWeight =
-    '600';
-
+  Object.assign(
+    translation.style,
+    {
+      marginTop: '4px',
+      fontSize: '19px',
+      fontWeight: '650'
+    }
+  );
 
   const language =
     document.createElement(
@@ -261,58 +240,179 @@ function showPopup(
     );
 
   language.textContent =
-    targetLanguage === 'fr'
-      ? 'French'
-      : 'English';
+    `${languageName(
+      result.sourceLanguage
+    )} → ${languageName(
+      result.targetLanguage
+    )}`;
 
-  language.style.marginTop =
-    '5px';
+  Object.assign(
+    language.style,
+    {
+      marginTop: '5px',
+      opacity: '.52',
+      fontSize: '11px'
+    }
+  );
 
-  language.style.opacity =
-    '.5';
+  const save =
+    document.createElement(
+      'button'
+    );
 
-  language.style.fontSize =
-    '11px';
+  save.type =
+    'button';
 
+  save.textContent =
+    signedIn
+      ? '☆ SAVE WORD'
+      : 'LOG IN TO SAVE';
+
+  Object.assign(
+    save.style,
+    {
+      width: '100%',
+      height: '34px',
+      marginTop: '11px',
+      border: '1px solid rgba(255,145,30,.65)',
+      borderRadius: '9px',
+      background: signedIn
+        ? '#ff8a00'
+        : 'transparent',
+      color: signedIn
+        ? '#17100a'
+        : '#ffad4a',
+      fontWeight: '800',
+      fontSize: '11px',
+      letterSpacing: '.04em',
+      cursor: 'pointer'
+    }
+  );
+
+  save.addEventListener(
+    'click',
+    event => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      ipcRenderer.sendToHost(
+        'storylingo-save-word',
+        result
+      );
+    }
+  );
 
   popup.append(
     original,
-    result,
-    language
+    translation,
+    language,
+    save
   );
-
 
   document.body.appendChild(
     popup
   );
-
 }
 
+async function translate(
+  event,
+  word
+) {
+  if (!word) {
+    return;
+  }
 
-/*
- * WORD CLICK
- */
+  const currentRequest =
+    ++requestNumber;
+
+  try {
+    const result =
+      await ipcRenderer.invoke(
+        'translate-word',
+        {
+          word,
+          targetLanguage:
+            nativeLanguage
+        }
+      );
+
+    if (
+      currentRequest !==
+        requestNumber ||
+      !result?.translation
+    ) {
+      return;
+    }
+
+    showPopup(
+      event.clientX,
+      event.clientY,
+      result
+    );
+  } catch (error) {
+    console.error(
+      'OrangeSoft translation error:',
+      error
+    );
+  }
+}
+
+function isEditableTarget(target) {
+  return Boolean(
+    target?.closest?.(
+      'input, textarea, select, button, [contenteditable="true"]'
+    )
+  );
+}
+
+document.addEventListener(
+  'mouseup',
+  event => {
+    if (
+      isEditableTarget(
+        event.target
+      )
+    ) {
+      return;
+    }
+
+    const word =
+      selectedWord();
+
+    if (!word) {
+      return;
+    }
+
+    translate(
+      event,
+      word
+    );
+  },
+  true
+);
 
 document.addEventListener(
   'click',
-
-  async event => {
-
-    /*
-     * Don't interfere with forms
-     * or editable fields.
-     */
-
+  event => {
     if (
-      event.target.closest(
-        'input, textarea, select, button, [contenteditable="true"]'
+      isEditableTarget(
+        event.target
       )
     ) {
-
       return;
-
     }
 
+    /*
+     * A text selection is handled by
+     * mouseup above. A normal click
+     * translates the word under the
+     * pointer.
+     */
+    if (
+      selectedWord()
+    ) {
+      return;
+    }
 
     const word =
       getWordAtPoint(
@@ -320,83 +420,55 @@ document.addEventListener(
         event.clientY
       );
 
-
     if (!word) {
-
       removePopup();
-
       return;
-
     }
 
-
-    const currentRequest =
-      ++requestNumber;
-
-
-    try {
-
-      const result =
-        await ipcRenderer.invoke(
-          'translate-word',
-          word
-        );
-
-
-      if (
-        currentRequest !==
-        requestNumber
-      ) {
-
-        return;
-
-      }
-
-
-      if (
-        !result ||
-        !result.translation
-      ) {
-
-        return;
-
-      }
-
-
-      showPopup(
-        event.clientX,
-        event.clientY,
-        word,
-        result.translation,
-        result.targetLanguage
-      );
-
-    } catch (error) {
-
-      console.error(
-        'OrangeSoft translation error:',
-        error
-      );
-
-    }
-
+    translate(
+      event,
+      word
+    );
   },
   true
 );
 
-
 document.addEventListener(
   'keydown',
   event => {
-
     if (
       event.key ===
       'Escape'
     ) {
-
       removePopup();
+    }
+  }
+);
 
+ipcRenderer.on(
+  'storylingo-preferences',
+  (
+    event,
+    preferences
+  ) => {
+    const language =
+      String(
+        preferences
+          ?.nativeLanguage ||
+        ''
+      ).toLowerCase();
+
+    if (
+      languageNames[
+        language
+      ]
+    ) {
+      nativeLanguage =
+        language;
     }
 
+    signedIn =
+      preferences
+        ?.signedIn === true;
   }
 );
