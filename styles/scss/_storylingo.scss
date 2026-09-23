@@ -1,0 +1,608 @@
+.storylingo-profile-button {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #d6d6d6;
+  border-radius: 50%;
+  background: #f1f1f1;
+  color: #484848;
+  font: 700 13px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  cursor: pointer;
+  transition: box-shadow .15s ease, border-color .15s ease, transform .15s ease;
+}
+.storylingo-profile-button:hover,
+.storylingo-profile-button[aria-expanded="true"] {
+  border-color: #ff9a2e;
+  box-shadow: 0 0 0 3px rgba(255, 138, 0, .14);
+}
+.storylingo-profile-button:active { transform: scale(.96); }
+.storylingo-profile-button.is-signed-in {
+  background: #ff8a00;
+  border-color: #ff8a00;
+  color: #16100a;
+}
+.storylingo-profile-button img,
+.storylingo-avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.storylingo-account-popover {
+  position: fixed;
+  z-index: 9000;
+  top: 96px;
+  right: 14px;
+  width: min(360px, calc(100vw - 28px));
+  max-height: min(640px, calc(100vh - 116px));
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid #d8d8d8;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .98);
+  color: #171717;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .2);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+.storylingo-account-popover[hidden] { display: none; }
+.storylingo-account-head {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 7px 13px;
+}
+.storylingo-account-head > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.storylingo-account-head strong {
+  overflow: hidden;
+  font-size: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.storylingo-account-head span:not(.storylingo-avatar) {
+  overflow: hidden;
+  color: #737373;
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.storylingo-avatar {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #ff8a00;
+  color: #16100a;
+  font-weight: 800;
+}
+.storylingo-avatar.large {
+  width: 52px;
+  height: 52px;
+  font-size: 16px;
+}
+.storylingo-account-language {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 5px 8px;
+  padding: 11px 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 13px;
+  background: #f8f8f8;
+}
+.storylingo-account-language span {
+  color: #7a7a7a;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.storylingo-account-language strong { font-size: 12px; }
+.storylingo-account-status {
+  margin: 8px 5px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff5e9;
+  color: #8a4d00;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.storylingo-account-menu {
+  display: grid;
+  gap: 3px;
+  padding: 3px;
+}
+.storylingo-account-menu button {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 1px 10px;
+  width: 100%;
+  padding: 11px 10px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #1c1c1c;
+  text-align: left;
+  cursor: pointer;
+}
+.storylingo-account-menu button:hover { background: #f1f1f1; }
+.storylingo-account-menu button.accent { background: #fff4e7; }
+.storylingo-account-menu button.accent:hover { background: #ffe9cf; }
+.storylingo-account-menu button > span {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #ececec;
+  font-size: 16px;
+}
+.storylingo-account-menu button.accent > span {
+  background: #ff8a00;
+  color: #18110a;
+}
+.storylingo-account-menu b {
+  align-self: end;
+  font-size: 13px;
+}
+.storylingo-account-menu small {
+  overflow: hidden;
+  color: #777;
+  font-size: 10.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.storylingo-account-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 5px 0;
+  padding: 10px 4px 2px;
+  border-top: 1px solid #ededed;
+  color: #8a8a8a;
+  font-size: 10px;
+}
+.storylingo-account-foot button {
+  border: 0;
+  background: transparent;
+  color: #a95a00;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.storylingo-icon-button {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #efefef;
+  color: #333;
+  font-size: 18px;
+  cursor: pointer;
+}
+.storylingo-icon-button:hover { background: #e4e4e4; }
+.storylingo-popover-titlebar {
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 3px 12px;
+}
+.storylingo-popover-titlebar strong {
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: .08em;
+}
+.storylingo-settings {
+  display: grid;
+  gap: 12px;
+  padding: 8px 7px 10px;
+}
+.storylingo-settings label,
+.storylingo-tutorial-setting label {
+  color: #767676;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.storylingo-settings select,
+.storylingo-tutorial-setting select {
+  width: 100%;
+  height: 44px;
+  padding: 0 13px;
+  border: 1px solid #d7d7d7;
+  border-radius: 10px;
+  background: #fff;
+  color: #161616;
+  font: 600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  outline: none;
+}
+.storylingo-settings select:focus,
+.storylingo-tutorial-setting select:focus {
+  border-color: #ff8a00;
+  box-shadow: 0 0 0 3px rgba(255, 138, 0, .12);
+}
+.storylingo-settings select:disabled {
+  background: #f2f2f2;
+  color: #777;
+}
+.storylingo-settings p {
+  margin: -3px 0 2px;
+  color: #777;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.storylingo-primary-button,
+.storylingo-secondary-button,
+.storylingo-text-button {
+  min-height: 38px;
+  padding: 0 15px;
+  border-radius: 10px;
+  font: 800 11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: .05em;
+  cursor: pointer;
+}
+.storylingo-primary-button {
+  border: 1px solid #ff8a00;
+  background: #ff8a00;
+  color: #17100a;
+}
+.storylingo-primary-button:hover { filter: brightness(1.04); }
+.storylingo-primary-button.wide,
+.storylingo-secondary-button { width: 100%; }
+.storylingo-secondary-button {
+  border: 1px solid #d6d6d6;
+  background: #fff;
+  color: #333;
+}
+.storylingo-secondary-button:hover { background: #f5f5f5; }
+.storylingo-text-button {
+  border: 0;
+  background: transparent;
+  color: #676767;
+}
+.storylingo-text-button:disabled {
+  opacity: .25;
+  cursor: default;
+}
+.storylingo-saved-list {
+  display: grid;
+  gap: 12px;
+  padding: 2px 5px 8px;
+}
+.storylingo-word-group {
+  display: grid;
+  gap: 7px;
+}
+.storylingo-word-group + .storylingo-word-group { padding-top: 5px; }
+.storylingo-word-group h3 {
+  margin: 0;
+  padding: 2px 2px 0;
+  color: #777;
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.storylingo-word-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 11px;
+  border: 1px solid #e5e5e5;
+  border-radius: 11px;
+  background: #fafafa;
+}
+.storylingo-word-row > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.storylingo-word-row strong {
+  overflow: hidden;
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.storylingo-word-row span {
+  overflow: hidden;
+  color: #a95a00;
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.storylingo-word-row small {
+  color: #858585;
+  font-size: 9.5px;
+}
+.storylingo-word-row > button {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  background: #fff;
+  color: #777;
+  font-size: 16px;
+  cursor: pointer;
+}
+.storylingo-word-row > button:hover {
+  border-color: #c46e6e;
+  color: #a32626;
+}
+.storylingo-empty {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 20px 14px;
+  border: 1px dashed #d7d7d7;
+  border-radius: 13px;
+  color: #777;
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: center;
+}
+.storylingo-empty strong {
+  color: #303030;
+  font-size: 13px;
+}
+.storylingo-empty .storylingo-primary-button { margin-top: 8px; }
+.storylingo-tutorial {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+}
+.storylingo-tutorial[hidden] { display: none; }
+.storylingo-tutorial-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(12, 12, 13, .58);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+}
+.storylingo-tutorial-card {
+  position: relative;
+  width: min(850px, 94vw);
+  min-height: 500px;
+  display: grid;
+  grid-template-columns: 38% minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 26px;
+  background: #fff;
+  box-shadow: 0 32px 110px rgba(0, 0, 0, .34);
+}
+.storylingo-modal-close {
+  position: absolute;
+  z-index: 3;
+  top: 15px;
+  right: 15px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .06);
+  color: #333;
+  font-size: 21px;
+  cursor: pointer;
+}
+.storylingo-tutorial-art {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 35px;
+  background: radial-gradient(circle at 50% 38%, rgba(255, 176, 72, .35), transparent 32%), #121212;
+  color: #fff;
+}
+.storylingo-tutorial-art p {
+  margin: 0;
+  color: #c7c7c7;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .13em;
+}
+.storylingo-tutorial-orb {
+  width: 152px;
+  height: 152px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #ff8100;
+  color: #121212;
+  font-size: 62px;
+  font-weight: 900;
+  box-shadow: 0 20px 70px rgba(255, 129, 0, .26);
+}
+.storylingo-tutorial-content {
+  display: flex;
+  flex-direction: column;
+  padding: 54px 50px 34px;
+}
+.storylingo-eyebrow {
+  margin: 0 0 12px;
+  color: #c76700;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+.storylingo-tutorial-content h1 {
+  margin: 0;
+  color: #171717;
+  font-size: clamp(28px, 3vw, 38px);
+  line-height: 1.05;
+  letter-spacing: -.025em;
+}
+.storylingo-tutorial-copy {
+  max-width: 520px;
+  margin: 16px 0 0;
+  color: #686868;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.storylingo-tutorial-demo {
+  min-height: 82px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 23px;
+  padding: 18px;
+  border: 1px solid #e4e4e4;
+  border-radius: 15px;
+  background: #f8f8f8;
+  font-size: 18px;
+}
+.storylingo-tutorial-demo[hidden] { display: none; }
+.sl-demo-word {
+  padding: 6px 9px;
+  border-radius: 7px;
+  background: #ffdfba;
+  color: #7d4100;
+}
+.sl-demo-arrow { color: #999; }
+.sl-demo-chip {
+  padding: 8px 10px;
+  border: 1px solid #dedede;
+  border-radius: 999px;
+  background: #fff;
+  color: #444;
+  font-size: 11px;
+  font-weight: 700;
+}
+.storylingo-tutorial-setting {
+  display: grid;
+  gap: 8px;
+  margin-top: 23px;
+  padding: 18px;
+  border: 1px solid #e5e5e5;
+  border-radius: 15px;
+  background: #fafafa;
+}
+.storylingo-tutorial-setting[hidden],
+.storylingo-tutorial-account[hidden] { display: none; }
+.storylingo-tutorial-account { margin-top: 23px; }
+.storylingo-tutorial-account-card {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid #e2e2e2;
+  border-radius: 15px;
+  background: #fafafa;
+}
+.storylingo-tutorial-account-card > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.storylingo-tutorial-account-card strong { font-size: 13px; }
+.storylingo-tutorial-account-card span:not(.storylingo-avatar) {
+  color: #747474;
+  font-size: 10.5px;
+  line-height: 1.35;
+}
+.storylingo-tutorial-account-card button {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid #ff8a00;
+  border-radius: 9px;
+  background: #ff8a00;
+  color: #17100a;
+  font-size: 9px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.storylingo-tutorial-progress {
+  display: flex;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 28px;
+}
+.storylingo-tutorial-progress span {
+  width: 22px;
+  height: 4px;
+  border-radius: 999px;
+  background: #dedede;
+}
+.storylingo-tutorial-progress span.active { background: #ff8a00; }
+.storylingo-tutorial-actions {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+.storylingo-tutorial-actions .storylingo-primary-button {
+  justify-self: end;
+  min-width: 132px;
+}
+.storylingo-toast {
+  position: fixed;
+  z-index: 13000;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 18px);
+  padding: 10px 15px;
+  border-radius: 999px;
+  background: rgba(25, 25, 26, .96);
+  color: #fff;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, .24);
+  opacity: 0;
+  visibility: hidden;
+  font-size: 12px;
+  transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+}
+.storylingo-toast.visible {
+  transform: translate(-50%, 0);
+  opacity: 1;
+  visibility: visible;
+}
+webview.storylingo-account-bridge {
+  position: fixed !important;
+  inset: auto !important;
+  width: 1px !important;
+  height: 1px !important;
+  display: flex !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+@media (max-width: 760px) {
+  .storylingo-tutorial { padding: 14px; }
+  .storylingo-tutorial-card {
+    width: min(560px, 96vw);
+    min-height: 0;
+    grid-template-columns: 1fr;
+  }
+  .storylingo-tutorial-art {
+    min-height: 130px;
+    padding: 24px;
+  }
+  .storylingo-tutorial-orb {
+    width: 78px;
+    height: 78px;
+    font-size: 32px;
+  }
+  .storylingo-tutorial-content { padding: 28px 24px 22px; }
+  .storylingo-tutorial-account-card { grid-template-columns: 40px minmax(0, 1fr); }
+  .storylingo-tutorial-account-card button { grid-column: 1 / -1; }
+}
