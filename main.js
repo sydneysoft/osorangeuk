@@ -248,13 +248,58 @@ async function requestTranslation(
 }
 
 
+const STORYLINGO_TARGET_LANGUAGES = new Set([
+  'en',
+  'uk',
+  'ru',
+  'pl',
+  'fr',
+  'de',
+  'es',
+  'it'
+]);
+
+function normalizeLanguageCode(value) {
+  const code = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, '-');
+
+  if (!code || code === 'unknown' || code === 'auto') {
+    return 'und';
+  }
+
+  return /^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/.test(code)
+    ? code
+    : 'und';
+}
+
 ipcMain.handle(
   'translate-word',
 
   async (
     event,
-    word
+    request
   ) => {
+
+    const word =
+      typeof request === 'string'
+        ? request
+        : request?.word;
+
+    const requestedTarget =
+      typeof request === 'object'
+        ? normalizeLanguageCode(
+            request?.targetLanguage
+          )
+        : 'en';
+
+    const targetLanguage =
+      STORYLINGO_TARGET_LANGUAGES.has(
+        requestedTarget
+      )
+        ? requestedTarget
+        : 'en';
 
     if (
       typeof word !== 'string' ||
@@ -265,7 +310,6 @@ ipcMain.handle(
 
     }
 
-
     const cleanWord =
       word
         .trim()
@@ -274,10 +318,12 @@ ipcMain.handle(
           100
         );
 
-
     /*
-     * First translate toward English.
-     * This also gives us detected language.
+     * Translate toward English first so
+     * Google also reports the detected
+     * source language. The actual result
+     * is then translated into the user's
+     * StoryLingo native language.
      */
 
     const englishResult =
@@ -286,66 +332,39 @@ ipcMain.handle(
         'en'
       );
 
-
     const sourceLanguage =
-      englishResult
-        .detectedLanguage
-        .toLowerCase();
+      normalizeLanguageCode(
+        englishResult.detectedLanguage
+      );
 
-
-    /*
-     * English → French
-     */
+    let translation =
+      englishResult.translation;
 
     if (
-      sourceLanguage === 'en' ||
-      sourceLanguage.startsWith(
-        'en-'
-      )
+      targetLanguage !== 'en'
     ) {
 
-      const frenchResult =
+      const targetResult =
         await requestTranslation(
           cleanWord,
-          'fr'
+          targetLanguage
         );
 
-
-      return {
-
-        original:
-          cleanWord,
-
-        translation:
-          frenchResult.translation,
-
-        sourceLanguage:
-          'en',
-
-        targetLanguage:
-          'fr'
-
-      };
+      translation =
+        targetResult.translation;
 
     }
-
-
-    /*
-     * Everything else → English
-     */
 
     return {
 
       original:
         cleanWord,
 
-      translation:
-        englishResult.translation,
+      translation,
 
       sourceLanguage,
 
-      targetLanguage:
-        'en'
+      targetLanguage
 
     };
 
