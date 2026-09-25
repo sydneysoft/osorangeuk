@@ -606,3 +606,29 @@ webview.storylingo-account-bridge {
   .storylingo-tutorial-account-card { grid-template-columns: 40px minmax(0, 1fr); }
   .storylingo-tutorial-account-card button { grid-column: 1 / -1; }
 }
+
+
+.storylingo-settings-links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+.storylingo-settings-note {
+  margin: 0 !important;
+  padding-top: 10px;
+  border-top: 1px solid #ececec;
+  color: #777 !important;
+  font-size: 10px !important;
+}
+.storylingo-profile-button:focus-visible,
+.storylingo-account-popover button:focus-visible,
+.storylingo-account-popover select:focus-visible,
+.storylingo-tutorial button:focus-visible,
+.storylingo-tutorial select:focus-visible {
+  outline: 3px solid rgba(255, 138, 0, .42);
+  outline-offset: 2px;
+}
+@media (max-width: 520px) {
+  .storylingo-settings-links { grid-template-columns: 1fr; }
+}

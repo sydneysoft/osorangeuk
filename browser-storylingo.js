@@ -1,6 +1,8 @@
 (() => {
   const STORYLINGO_ORIGIN = 'https://storylingo.uk';
-  const ONBOARDING_KEY = 'orangesoft:storylingo-onboarding:v1';
+  const BROWSER_MAJOR_VERSION = '1';
+  const COACHMARK_KEY = `orangesoft:storylingo-whats-new:major-${BROWSER_MAJOR_VERSION}`;
+  const LEGACY_ONBOARDING_KEY = 'orangesoft:storylingo-onboarding:v1';
   const PREFS_KEY = 'orangesoft:storylingo-preferences:v1';
 
   const LANGUAGES = {
@@ -48,6 +50,7 @@
   let currentTutorialStep = 0;
   let activePanel = 'menu';
   let statusMessage = '';
+  let popoverReturnFocus = null;
 
   const toolbar = document.getElementById('toolbar');
   const browserContainer = document.getElementById('browser-container');
@@ -111,6 +114,8 @@
     const popover = document.createElement('section');
     popover.id = 'storylingo-account-popover';
     popover.className = 'storylingo-account-popover';
+    popover.setAttribute('role', 'dialog');
+    popover.setAttribute('aria-label', 'StoryLingo browser menu');
     popover.hidden = true;
     document.body.appendChild(popover);
 
@@ -151,6 +156,8 @@
     toast.id = 'storylingo-toast';
     toast.className = 'storylingo-toast';
     toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    toast.setAttribute('aria-atomic', 'true');
     document.body.appendChild(toast);
 
     const bridge = document.createElement('webview');
@@ -213,6 +220,9 @@
       } else if (action === 'tutorial') {
         setPopoverOpen(false);
         openTutorial(0);
+      } else if (action === 'privacy') {
+        setPopoverOpen(false);
+        navigate(`${STORYLINGO_ORIGIN}/privacy`);
       } else if (action === 'back') {
         activePanel = 'menu';
         renderPopover();
@@ -280,8 +290,22 @@
     const popover = document.getElementById('storylingo-account-popover');
     const button = document.getElementById('storylingo-profile-button');
     if (!popover || !button) return;
-    popover.hidden = !open;
-    button.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+    if (open) {
+      popoverReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : button;
+      popover.hidden = false;
+      button.setAttribute('aria-expanded', 'true');
+      requestAnimationFrame(() => {
+        popover.querySelector('button:not([disabled]), select:not([disabled]), a[href]')?.focus();
+      });
+      return;
+    }
+
+    popover.hidden = true;
+    button.setAttribute('aria-expanded', 'false');
+    const target = popoverReturnFocus;
+    popoverReturnFocus = null;
+    target?.focus?.();
   }
 
   function profileAvatarMarkup(className = '') {
@@ -335,6 +359,11 @@
           ${account.signedIn
             ? '<button type="button" class="storylingo-secondary-button" data-storylingo-action="account">OPEN STORYLINGO ACCOUNT SETTINGS</button>'
             : '<button type="button" class="storylingo-primary-button wide" data-storylingo-action="login">LOG IN TO STORYLINGO</button>'}
+          <div class="storylingo-settings-links" aria-label="Help and privacy">
+            <button type="button" class="storylingo-secondary-button" data-storylingo-action="tutorial">WHAT'S NEW &amp; HELP</button>
+            <button type="button" class="storylingo-secondary-button" data-storylingo-action="privacy">PRIVACY POLICY</button>
+          </div>
+          <p class="storylingo-settings-note">Keyboard: select text and press Alt+Shift+T to translate. Press Esc to close the word popup.</p>
         </div>
       `;
       return;
@@ -360,7 +389,7 @@
           : '<button type="button" class="accent" data-storylingo-action="login"><span>↗</span><b>Log in to StoryLingo</b><small>Save and sync words across your account</small></button>'}
         <button type="button" data-storylingo-action="saved"><span>☆</span><b>Saved words</b><small>${account.signedIn ? 'Your synced vocabulary' : 'Available after you log in'}</small></button>
         <button type="button" data-storylingo-action="settings"><span>⚙</span><b>Settings</b><small>Translation language and account</small></button>
-        <button type="button" data-storylingo-action="tutorial"><span>?</span><b>How OrangeSoft translation works</b><small>Replay the browser tutorial</small></button>
+        <button type="button" data-storylingo-action="tutorial"><span>?</span><b>What's new &amp; help</b><small>Replay the focused reading and vocabulary tour</small></button>
       </div>
       <div class="storylingo-account-foot">
         <span>Powered by StoryLingo</span>
@@ -415,7 +444,10 @@
     if (!tutorial || tutorial.hidden) return;
     tutorial.hidden = true;
     if (markSeen) {
-      try { localStorage.setItem(ONBOARDING_KEY, '1'); } catch {}
+      try {
+        localStorage.setItem(COACHMARK_KEY, '1');
+        localStorage.setItem(LEGACY_ONBOARDING_KEY, '1');
+      } catch {}
     }
   }
 
@@ -561,8 +593,13 @@
 
     const send = () => sendPreferences(webview);
     webview.addEventListener('dom-ready', send);
-    webview.addEventListener('ipc-message', event => {
-      if (event.channel === 'storylingo-save-word') saveWord(event.args?.[0]);
+    webview.addEventListener('ipc-message', async event => {
+      if (event.channel !== 'storylingo-save-word') return;
+      const result = await saveWord(event.args?.[0]);
+      try {
+        if (result?.ok) webview.send('storylingo-word-saved', result);
+        else if (result?.reason !== 'login') webview.send('storylingo-word-save-failed', result || {});
+      } catch {}
     });
 
     const refreshIfStoryLingo = event => {
@@ -599,7 +636,7 @@
         }
       : null;
 
-    if (!word?.word) return;
+    if (!word?.word) return { ok: false, reason: 'invalid' };
     await syncAccount();
 
     if (!account.signedIn) {
@@ -609,7 +646,7 @@
       renderPopover();
       setPopoverOpen(true);
       showToast('Log in to StoryLingo to save words');
-      return;
+      return { ok: false, reason: 'login', original: word.word };
     }
 
     try {
@@ -620,17 +657,46 @@
           if (!auth) return { ok: false, reason: 'unavailable' };
           await auth.ready;
           if (!auth.isSignedIn()) return { ok: false, reason: 'signed-out' };
-          await auth.saveFavoriteWord(${serialized});
-          return { ok: true };
+
+          const incoming = ${serialized};
+          const normalizedWord = String(incoming.word || '').trim().toLocaleLowerCase();
+          const normalizedTranslation = String(incoming.translation || '').trim().toLocaleLowerCase();
+          const words = await auth.getFavoriteWords();
+          const existing = words.find(item =>
+            String(item.word || '').trim().toLocaleLowerCase() === normalizedWord &&
+            item.sourceLanguage === incoming.sourceLanguage &&
+            item.targetLanguage === incoming.targetLanguage
+          );
+
+          const status = !existing
+            ? 'saved'
+            : String(existing.translation || '').trim().toLocaleLowerCase() === normalizedTranslation
+              ? 'already'
+              : 'updated';
+
+          await auth.saveFavoriteWord(incoming);
+          return { ok: true, status };
         })()
       `);
       if (!result?.ok) throw new Error('Please log in to StoryLingo again.');
 
-      const other = !LANGUAGES[word.sourceLanguage];
-      showToast(other ? 'Saved · Other languages' : `Saved · ${languageName(word.sourceLanguage)}`);
+      if (result.status === 'updated') showToast('Updated in My Words');
+      else if (result.status === 'already') showToast('Already in My Words');
+      else showToast('Saved to My Words');
+
       statusMessage = '';
+      return {
+        ok: true,
+        status: result.status || 'saved',
+        original: word.word,
+        translation: word.translation,
+        sourceLanguage: word.sourceLanguage,
+        targetLanguage: word.targetLanguage
+      };
     } catch (error) {
-      showToast(error?.message || 'Could not save this word');
+      const message = error?.message || 'Could not save this word';
+      showToast(message);
+      return { ok: false, reason: 'error', message, original: word.word };
     }
   }
 
@@ -730,7 +796,7 @@
   createUI();
 
   try {
-    if (localStorage.getItem(ONBOARDING_KEY) !== '1') {
+    if (localStorage.getItem(COACHMARK_KEY) !== '1') {
       setTimeout(() => openTutorial(0), 350);
     }
   } catch {

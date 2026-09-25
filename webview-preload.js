@@ -6,6 +6,8 @@ let popup = null;
 let requestNumber = 0;
 let nativeLanguage = 'en';
 let signedIn = false;
+let activeSaveButton = null;
+let activeResult = null;
 
 const languageNames = {
   en: 'English',
@@ -169,6 +171,12 @@ function showPopup(
       'div'
     );
 
+  popup.setAttribute('role', 'dialog');
+  popup.setAttribute('aria-label', `Translation for ${result.original}`);
+  popup.setAttribute('aria-live', 'polite');
+  popup.tabIndex = -1;
+  activeResult = result;
+
   Object.assign(
     popup.style,
     {
@@ -200,6 +208,33 @@ function showPopup(
       lineHeight: '1.4'
     }
   );
+
+  const close =
+    document.createElement(
+      'button'
+    );
+
+  close.type = 'button';
+  close.textContent = '×';
+  close.setAttribute('aria-label', 'Close translation');
+  Object.assign(close.style, {
+    position: 'absolute',
+    top: '8px',
+    right: '9px',
+    width: '26px',
+    height: '26px',
+    border: '0',
+    borderRadius: '50%',
+    background: 'rgba(255,255,255,.08)',
+    color: '#fff',
+    fontSize: '18px',
+    cursor: 'pointer'
+  });
+  close.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    removePopup();
+  });
 
   const original =
     document.createElement(
@@ -263,6 +298,11 @@ function showPopup(
   save.type =
     'button';
 
+  save.setAttribute('aria-label', signedIn
+    ? `Save ${result.original} to My Words`
+    : `Log in to save ${result.original} to My Words`);
+  save.setAttribute('aria-pressed', 'false');
+
   save.textContent =
     signedIn
       ? '☆ SAVE WORD'
@@ -295,6 +335,11 @@ function showPopup(
       event.preventDefault();
       event.stopPropagation();
 
+      save.disabled = true;
+      save.textContent = signedIn ? 'SAVING…' : 'OPENING LOGIN…';
+      save.setAttribute('aria-busy', 'true');
+      activeSaveButton = save;
+
       ipcRenderer.sendToHost(
         'storylingo-save-word',
         result
@@ -303,6 +348,7 @@ function showPopup(
   );
 
   popup.append(
+    close,
     original,
     translation,
     language,
@@ -436,11 +482,35 @@ document.addEventListener(
 document.addEventListener(
   'keydown',
   event => {
-    if (
-      event.key ===
-      'Escape'
-    ) {
+    if (event.key === 'Escape') {
       removePopup();
+      return;
+    }
+
+    if (
+      event.altKey &&
+      event.shiftKey &&
+      String(event.key || '').toLowerCase() === 't' &&
+      !isEditableTarget(event.target)
+    ) {
+      const word = selectedWord();
+      if (!word) return;
+
+      const selection = window.getSelection?.();
+      const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+      const rect = range?.getBoundingClientRect?.();
+      event.preventDefault();
+      event.stopPropagation();
+
+      translate(
+        {
+          clientX: Math.max(12, rect?.left || window.innerWidth / 2),
+          clientY: Math.max(12, rect?.bottom || window.innerHeight / 2)
+        },
+        word
+      ).then(() => {
+        activeSaveButton?.focus?.();
+      });
     }
   }
 );
@@ -470,5 +540,34 @@ ipcRenderer.on(
     signedIn =
       preferences
         ?.signedIn === true;
+  }
+);
+
+
+ipcRenderer.on(
+  'storylingo-word-saved',
+  (event, result) => {
+    if (!activeSaveButton || !activeResult) return;
+    if (String(result?.original || '').trim() !== String(activeResult.original || '').trim()) return;
+
+    activeSaveButton.disabled = true;
+    activeSaveButton.textContent = '★ SAVED';
+    activeSaveButton.setAttribute('aria-busy', 'false');
+    activeSaveButton.setAttribute('aria-pressed', 'true');
+    activeSaveButton.setAttribute('aria-label', `${activeResult.original} is saved to My Words`);
+    activeSaveButton.style.background = '#ff8a00';
+    activeSaveButton.style.color = '#17100a';
+  }
+);
+
+ipcRenderer.on(
+  'storylingo-word-save-failed',
+  (event, result) => {
+    if (!activeSaveButton) return;
+    activeSaveButton.disabled = false;
+    activeSaveButton.textContent = signedIn ? '☆ SAVE WORD' : 'LOG IN TO SAVE';
+    activeSaveButton.setAttribute('aria-busy', 'false');
+    activeSaveButton.setAttribute('aria-pressed', 'false');
+    activeSaveButton.setAttribute('aria-label', result?.message || 'Saving failed. Try again.');
   }
 );
