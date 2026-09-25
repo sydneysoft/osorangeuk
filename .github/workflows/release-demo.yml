@@ -1,4 +1,4 @@
-name: Publish OrangeSoft Browser Demo
+name: Publish Signed OrangeSoft Browser Demo
 
 on:
   workflow_dispatch:
@@ -12,6 +12,12 @@ permissions:
 jobs:
   build-macos:
     runs-on: macos-latest
+    env:
+      CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
     steps:
       - name: Checkout
@@ -21,9 +27,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
+
+      - name: Require macOS signing credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Missing required macOS signing secret: $name"
+              exit 1
+            fi
+          done
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build frontend bundle
         run: npm run js:build
@@ -31,12 +49,22 @@ jobs:
       - name: Build styles
         run: npm run sass
 
-      - name: Build macOS demo
-        run: npx electron-builder --mac dmg --publish never
+      - name: Build, sign and notarize macOS demo
+        run: npx electron-builder --mac dmg --publish never --config.forceCodeSigning=true --config.mac.notarize=true
+
+      - name: Verify macOS signature and notarization ticket
+        shell: bash
+        run: |
+          set -euo pipefail
+          app="$(find dist -type d -name 'OrangeSoft Browser.app' -print -quit)"
+          test -n "$app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          xcrun stapler validate "$app"
 
       - name: Rename macOS demo
         shell: bash
         run: |
+          set -euo pipefail
           file="$(find dist -maxdepth 1 -name '*.dmg' -print -quit)"
           test -n "$file"
           cp "$file" OrangeSoft-Browser-Demo-macOS.dmg
@@ -49,6 +77,9 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
+    env:
+      WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+      WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
 
     steps:
       - name: Checkout
@@ -58,9 +89,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
+
+      - name: Require Windows signing credentials
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:WIN_CSC_LINK)) {
+            throw "Missing required Windows signing secret: WIN_CSC_LINK"
+          }
+          if ([string]::IsNullOrWhiteSpace($env:WIN_CSC_KEY_PASSWORD)) {
+            throw "Missing required Windows signing secret: WIN_CSC_KEY_PASSWORD"
+          }
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build frontend bundle
         run: npm run js:build
@@ -68,8 +110,19 @@ jobs:
       - name: Build styles
         run: npm run sass
 
-      - name: Build Windows demo
-        run: npx electron-builder --win nsis --publish never
+      - name: Build and sign Windows demo
+        run: npx electron-builder --win nsis --publish never --config.forceCodeSigning=true
+
+      - name: Verify Windows Authenticode signature
+        shell: pwsh
+        run: |
+          $file = Get-ChildItem dist -Filter *.exe | Select-Object -First 1
+          if (-not $file) { throw "No Windows installer found" }
+          $signature = Get-AuthenticodeSignature $file.FullName
+          if ($signature.Status -ne "Valid") {
+            throw "Windows installer signature is not valid. Status: $($signature.Status)"
+          }
+          Write-Host "Signed by: $($signature.SignerCertificate.Subject)"
 
       - name: Rename Windows demo
         shell: pwsh
@@ -103,7 +156,7 @@ jobs:
           name: release-windows
           path: release
 
-      - name: Publish demo release
+      - name: Publish signed demo release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: demo-${{ github.run_number }}
@@ -111,9 +164,10 @@ jobs:
           body: |
             OrangeSoft Browser demo for macOS and Windows.
 
-            Demo features include browser tabs, favorites, history, native-language word translation, StoryLingo saved vocabulary, first-run onboarding, and account settings.
+            The macOS build is Developer ID signed and notarized.
+            The Windows installer is Authenticode signed.
 
-            These demo builds are currently unsigned, so macOS Gatekeeper or Windows SmartScreen may display a warning.
+            Demo features include browser tabs, favorites, history, native-language word translation, StoryLingo saved vocabulary, first-run onboarding, and account settings.
           files: |
             release/OrangeSoft-Browser-Demo-macOS.dmg
             release/OrangeSoft-Browser-Demo-Windows.exe
